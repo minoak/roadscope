@@ -1,6 +1,6 @@
 # 모델 가중치 받기
 
-이 리포에는 모델 가중치가 하나도 없다. 아래 표의 출처에서 각자 받아서 정해진 위치에 둔다. 각 가중치의 이용 조건은 공급자가 정한 것을 따르며, 이 리포의 AGPL-3.0-only는 가중치에 적용되지 않는다.
+모델 가중치는 리포에 포함하지 않았다. 아래 표의 출처에서 직접 받아 지정된 위치에 둔다. 각 가중치의 이용 조건은 공급자가 정한 것을 따르며, 이 리포의 AGPL-3.0-only는 가중치에 적용되지 않는다.
 
 ## 모드별로 필요한 모델
 
@@ -14,7 +14,7 @@
 
 ## 모델별 출처와 위치
 
-체크섬은 개발에 쓴 로컬 파일의 SHA-256이다. Hugging Face 모델은 개발 때 캐시에 있던 스냅샷 revision을 적었다.
+체크섬은 개발에 사용한 로컬 파일에서 구한 SHA-256이다. Hugging Face 모델은 당시 캐시에 저장된 스냅샷의 revision을 적었다.
 
 | 모델 | 출처 | 버전 | 라이선스와 확인 상태 | 놓을 위치 |
 |---|---|---|---|---|
@@ -24,7 +24,7 @@
 | Depth Pro | Hugging Face `apple/DepthPro-hf` | revision `de816c8ce7168afcb231f96d501d72b869d0beda` | 모델 카드 기준 `license: apple-amlr`. 라이선스 원문의 조건은 확인하지 못했다 | Hugging Face 캐시 |
 | lane_focus U-Net R34 5-fold `lane_focus_fold{0..4}_best.pth` | Hugging Face `minoak/motorcycle-night-lane-focus` | fold0 `ef82f911c722638df9be6b4eccc5fec78ff5298a47ab488000649fa1ef4215f3`<br>fold1 `a1702832bdd4e835dcc1390b65eda4e427397e4d5995296ebb1b8ffefdb80713`<br>fold2 `043a33c92e8395f2e1442560dfca1a1401282ac2934205b05e4e5b0d909e3ec4`<br>fold3 `77dbf6486c7ee455d2f9e4bb0645429ec1daf470e5973f4ec617e88397a302a5`<br>fold4 `b087aafe630e8fe38347e2cd0ff1257e5519216e2dc4c52a8dae830054ef8e4e` | 이 프로젝트에서 Kaggle Motorcycle Night Ride 데이터로 학습한 모델. 모델 카드에 라이선스 항목이 없고, 학습 데이터 조건도 확인하지 못했다 | `<LANE>/lane_focus_fold0_best.pth` ~ `fold4` |
 
-`<MODELS>`와 `<LANE>`은 환경변수로 정한다.
+`<MODELS>`와 `<LANE>`의 위치는 아래 환경변수로 지정한다.
 
 | 환경변수 | 뜻 | 기본값 |
 |---|---|---|
@@ -32,7 +32,7 @@
 | `ROADSCOPE_LANE_DIR` | lane_focus 5개 파일 폴더 | `<ROADSCOPE_MODELS_DIR>/lane_focus` |
 | `HF_HOME` | Hugging Face 캐시 위치 (Hugging Face 기본 변수) | 사용자 폴더의 `.cache/huggingface` |
 
-기본값을 쓰면 아래처럼 놓는다. `models/`는 `.gitignore`에 들어 있다.
+기본 경로를 쓸 때의 폴더 구성은 다음과 같다. `models/`는 `.gitignore`에 들어 있다.
 
 ```text
 models/
@@ -44,7 +44,7 @@ models/
 
 ## 받는 명령 예시
 
-이 리포를 정리하는 작업에서는 아래 명령을 실행하지 않았다. 네트워크가 되는 환경에서 리포 루트를 작업 폴더로 두고 실행한다. Hugging Face 모델을 받으려면 각 모델 페이지에서 조건 동의가 필요할 수 있다.
+리포를 정리하면서 아래 명령을 직접 실행하지는 않았다. 인터넷에 연결된 환경에서 리포 루트로 이동한 뒤 실행한다. Hugging Face 모델을 받으려면 각 모델 페이지에서 조건 동의가 필요할 수 있다.
 
 ```powershell
 New-Item -ItemType Directory -Force models/lane_focus | Out-Null
@@ -59,10 +59,12 @@ hf download minoak/motorcycle-night-lane-focus --include "lane_focus_fold*_best.
 Get-FileHash models/yolo11m.pt, models/yolopv2.pt, models/lane_focus/*.pth -Algorithm SHA256
 ```
 
-- Mask2Former는 `local_files_only=True`로 읽는다. 캐시에 없으면 엔진이 내려받지 않고 오류를 낸다.
+- Mask2Former는 `local_files_only=True`로 읽는다. 캐시에 모델이 없으면 다운로드하지 않고 오류를 낸다.
 - Depth Pro는 캐시에 없으면 실행 중 내려받으려 한다. 미리 받은 뒤 `HF_HUB_OFFLINE=1`, `TRANSFORMERS_OFFLINE=1`로 실행하면 네트워크를 쓰지 않는다.
 - `yolo11m.pt`가 없으면 ultralytics가 실행 중 같은 경로로 내려받으려 한다.
-- 엔진은 Hugging Face 모델을 기본 브랜치(main) 이름으로 읽는다. `hf download`에 `--revision`으로 커밋을 지정하면 main 참조가 캐시에 생기지 않아 오프라인 실행에서 찾지 못한다. 그래서 위 예시는 main을 받는다. 위 표의 revision과 지금 main이 같은지는 확인하지 않았다. 다르면 결과가 평가 때와 다를 수 있다.
+- 엔진은 Hugging Face 모델을 기본 브랜치(main) 이름으로 읽는다. `hf download`에 `--revision`으로 커밋을 지정하면 캐시에 main 참조가 생기지 않아 오프라인 실행에서 모델을 찾지 못한다. 위 명령은 이 때문에 main을 받도록 했다.
+
+  표에 적힌 revision과 현재 main이 같은지는 확인하지 않았다. 둘이 다르면 평가 당시와 결과가 달라질 수 있다.
 
 ## 학습 도구에만 필요한 것
 
@@ -72,4 +74,6 @@ Get-FileHash models/yolo11m.pt, models/yolopv2.pt, models/lane_focus/*.pth -Algo
 
 ## 공개하지 않는 가중치
 
-내 차 영역 학생 모델(`ego_unet_r34.pt`, U-Net ResNet34)은 공개하지 않는다. 교사 출력(Mask2Former 등), Nexar 영상, 사전학습 encoder의 조건이 학생 가중치에 어떻게 적용되는지 정리되지 않았기 때문이다. 기본 엔진은 이 모델을 쓰지 않는다. 같은 절차로 다시 만들려면 `tools/distill/`의 `make_labels.py`, `train_ego.py`, `eval_ego.py`를 순서대로 쓴다. Nexar 영상과 위 교사 모델이 필요하다.
+내 차 영역 학생 모델(`ego_unet_r34.pt`, U-Net ResNet34)은 공개하지 않는다. 교사 출력(Mask2Former 등), Nexar 영상, 사전학습 encoder의 조건이 학생 가중치에 어떻게 적용되는지 정리되지 않았기 때문이다. 기본 엔진은 이 모델을 쓰지 않는다.
+
+같은 절차로 다시 만들려면 `tools/distill/`의 `make_labels.py`, `train_ego.py`, `eval_ego.py`를 순서대로 쓴다. Nexar 영상과 위 교사 모델이 필요하다.
