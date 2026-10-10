@@ -1,0 +1,35 @@
+# RoadScope 엔진 + FastAPI 웹 + 단위 테스트 직접 의존성.
+# 버전은 개발 환경(Python 3.12.10)에 설치된 값이다. 전체 환경 lock 파일은 아니다.
+#
+# torch/torchvision 은 CUDA 12.4 빌드다. CPU 전용이면 아래 index 줄과 두 줄의 +cu124 를 지우고
+# torch==2.6.0, torchvision==0.21.0 으로 설치한다.
+--extra-index-url https://download.pytorch.org/whl/cu124
+torch==2.6.0+cu124
+torchvision==0.21.0+cu124
+
+numpy==2.1.0
+# 개발 환경에는 opencv-python-headless 4.13.0.92 가 설치돼 있었다. ultralytics 가 opencv-python 을
+# 요구하므로 두 배포판이 함께 깔리지 않도록 여기서는 opencv-python 을 적는다 (같은 cv2 모듈).
+opencv-python==4.13.0.92
+pillow==11.2.1
+scipy==1.18.1
+matplotlib==3.10.3
+imageio-ffmpeg==0.6.0
+
+# 모델
+ultralytics==8.4.174
+segmentation-models-pytorch==0.5.0
+timm==1.0.26
+transformers==5.8.1
+huggingface-hub==1.15.0
+
+# 웹
+fastapi==0.142.2
+uvicorn==0.54.0
+python-multipart==0.0.32
+
+# 단위 테스트 (fastapi TestClient)
+httpx==0.28.1
+
+# 증류 학습 도구(tools/distill/train_ego.py)만 albumentations==2.0.8 이 더 필요하다.
+# albumentations 는 opencv-python-headless 를 함께 설치하므로 학습용 환경을 따로 두는 것을 권한다.

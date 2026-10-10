@@ -1,0 +1,18 @@
+[build-system]
+# license 의 SPDX 문자열 표기는 setuptools 77 이상이 필요하다.
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "roadscope"
+version = "0.1.0"
+description = "블랙박스 영상 장면 위험도 평가"
+readme = "README.md"
+license = "AGPL-3.0-only"
+license-files = ["LICENSE"]
+requires-python = ">=3.12"
+# 의존성은 CUDA 빌드 torch 때문에 requirements.txt 로 따로 설치한다.
+dependencies = []
+
+[tool.setuptools.packages.find]
+where = ["src"]

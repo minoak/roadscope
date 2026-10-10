@@ -1,0 +1,41 @@
+# 모델 가중치 (리포에 올리지 않는다. 받는 방법은 docs/models.md)
+/models/
+*.pt
+*.pth
+*.onnx
+*.safetensors
+*.ckpt
+
+# 입력 영상과 실행 결과 (tools/data/ 는 코드라서 루트 기준으로만 막는다)
+/runs_in/
+/runs_out/
+/data/
+/outputs/
+*.mp4
+*.mov
+*.avi
+*.mkv
+
+# 웹 작업 데이터 (업로드, 작업 상태, 결과)
+web/.data/
+web/tmp*/
+web/verification/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+/build/
+/dist/
+/.venv/
+/venv/
+
+# 로컬 설정과 비밀 값
+.env
+.env.*
+
+# 편집기, 운영체제
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#F4F5F7">
+  <title>RoadScope · 블랙박스 영상 위험도 평가</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@500&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <header><div class="header-inner">
+    <a href="#/" class="brand" aria-label="RoadScope 홈">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#1F4FD1" stroke-width="2" aria-hidden="true"><circle cx="14" cy="14" r="11"/><path d="M14 3v6M14 19v6M3 14h6M19 14h6"/><circle cx="14" cy="14" r="3"/></svg>
+      <span>RoadScope</span>
+    </a>
+    <nav id="navigation" aria-label="주 메뉴"></nav>
+  </div></header>
+  <div id="app"><main><p role="status">화면을 준비하고 있어요.</p></main></div>
+  <footer><div class="footer-inner"><span>RoadScope는 연구용 시연입니다. 실제 운전 판단이나 사고 책임 판단에 쓰지 마세요.</span><span>YOLO11 · YOLOPv2 · Mask2Former · Depth Pro</span></div></footer>
+
+  <template id="upload-template">
+    <main class="upload-layout">
+      <section class="upload-main stack-lg">
+        <div class="stack-sm">
+          <p class="eyebrow">블랙박스 영상 위험도 평가</p>
+          <h1 class="hero-title">영상 한 편에서<br>위험했던 순간을 찾아드립니다</h1>
+          <p class="intro">장면마다 앞차와의 거리, 옆 차로 차량, 차선 위치를 재서 안전 · 주의 · 위험 · 치명 네 단계로 표시합니다.</p>
+        </div>
+        <form id="upload-form" class="panel upload-form">
+          <label for="video-file" class="dropzone" id="dropzone">
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="#1F4FD1" stroke-width="2" aria-hidden="true"><rect x="5" y="10" width="22" height="20" rx="3"/><path d="M27 17l8-5v16l-8-5"/></svg>
+            <strong>블랙박스 영상을 끌어다 놓거나 눌러서 고르세요</strong>
+            <span class="muted small">MP4 · MOV, 최대 500MB · 40초 영상 기준 분석 2~3분</span>
+            <input id="video-file" name="video" type="file" accept=".mp4,.mov,video/mp4,video/quicktime" required>
+            <span id="selected-file" class="small" aria-live="polite"></span>
+          </label>
+          <fieldset><legend>어떤 차량의 블랙박스인가요?</legend>
+            <div class="vehicle-options">
+              <label class="vehicle-option"><input type="radio" name="vehicle" value="car" checked><span><strong>자동차</strong><span class="small muted">앞유리에 단 블랙박스. 내 차 보닛과 실내는 자동으로 제외합니다.</span></span></label>
+              <label class="vehicle-option"><input type="radio" name="vehicle" value="moto"><span><strong>오토바이</strong><span class="small muted">헬멧이나 핸들에 단 카메라. 차체 기울기를 고려합니다.</span></span></label>
+            </div>
+          </fieldset>
+          <div class="upload-actions"><span class="small muted">영상과 결과는 이 서버에 저장됩니다. 보관 기간은 아직 정해지지 않았습니다.</span><button type="submit" class="primary" id="submit-button">위험도 분석 시작</button></div>
+          <p id="upload-message" class="small" role="status"></p>
+        </form>
+      </section>
+      <aside class="upload-aside stack">
+        <section id="how" class="panel principles stack"><h2>판정 원칙</h2>
+          <div><span class="mono">01</span><p>그 순간의 장면으로 판단합니다. 몇 초 뒤를 예측해서 경보를 올리지 않습니다.</p></div>
+          <div><span class="mono">02</span><p>위험과 치명은 놓치지 않는 쪽으로, 주의는 과하게 뜨지 않는 쪽으로 기준을 잡았습니다.</p></div>
+          <div><span class="mono">03</span><p>판정 전에 카메라부터 잽니다. 수평선, 카메라 높이, 내 차가 보이는 영역을 영상마다 구합니다.</p></div>
+        </section>
+        <section id="limits" class="panel limits stack-sm"><h2>이런 영상은 정확도가 낮아요</h2><ul><li>카메라가 하늘이나 바닥을 크게 향한 경우</li><li>영상 앞부분 내내 차가 멈춰 있는 경우</li><li>트럭처럼 보닛이 화면 절반을 가리는 경우</li></ul><p class="small">이때는 결과에 “측정 신뢰 낮음”을 함께 표시합니다.</p></section>
+      </aside>
+    </main>
+  </template>
+
+  <template id="analyzing-template">
+    <main class="analyzing-layout stack-lg">
+      <div class="stack-sm"><h1>영상을 분석하고 있어요</h1><p class="muted">창을 닫아도 분석은 계속됩니다. 이 주소로 다시 오면 결과를 볼 수 있어요.</p></div>
+      <section class="panel progress-panel stack-lg">
+        <div class="stack-sm"><div class="space-between"><strong>전체 진행</strong><span class="mono progress-number" id="progress-number">0%</span></div>
+          <div class="progress-track" role="progressbar" aria-label="전체 진행률" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progress-fill"></div></div>
+          <p id="progress-note" class="small muted" role="status">분석을 준비하고 있어요.</p>
+        </div>
+        <ol class="stages">
+          <li><span class="step-icon">1</span><span><strong>영상 확인</strong><span class="small muted" id="video-info">영상 형식과 길이를 확인합니다.</span></span></li>
+          <li><span class="step-icon">2</span><span><strong>카메라 측정</strong><span class="small muted">수평선, 카메라 높이, 내 차가 보이는 영역, 차로 안 평소 위치</span></span></li>
+          <li><span class="step-icon">3</span><span><strong>장면 판정</strong><span class="small muted" id="frame-progress">장면마다 위험도를 판정합니다.</span></span></li>
+          <li><span class="step-icon">4</span><span><strong>결과 영상 만들기</strong><span class="small muted">경고가 표시된 영상과 타임라인</span></span></li>
+        </ol>
+      </section>
+      <section class="panel stack"><h2>카메라 측정 결과</h2><p class="muted small">측정값은 분석 완료 후 결과 화면에 표시됩니다.</p></section>
+      <p id="connection-message" class="small" role="status"></p>
+    </main>
+  </template>
+
+  <template id="result-template">
+    <main class="result-layout stack-lg">
+      <div class="space-between result-heading"><h1 id="result-title"></h1><span id="result-subtitle" class="small muted"></span></div>
+      <div id="confidence-banner" class="confidence-banner" role="status" hidden><span class="warning-symbol" aria-hidden="true">△</span><div class="stack-xs"><strong>측정 신뢰 낮음</strong><p>카메라 각도를 측정하지 못해 거리가 실제와 다를 수 있어요. 판정은 참고용으로만 보세요. 영상 앞부분에 차가 달리는 구간이 있으면 정확도가 올라갑니다.</p></div></div>
+      <section class="summary-grid" aria-label="요약">
+        <div class="summary-card" id="peak-card"><span>가장 높은 등급</span><strong id="peak-label"></strong><span id="peak-detail"></span></div>
+        <div class="summary-card panel"><span>위험 이상 구간</span><strong id="danger-count"></strong><span id="danger-detail"></span></div>
+        <div class="summary-card panel"><span>주의 구간</span><strong id="caution-count"></strong><span id="caution-detail"></span></div>
+        <div class="summary-card panel"><span>측정 신뢰도</span><strong id="confidence-label"></strong><span id="confidence-note"></span></div>
+      </section>
+      <div class="result-columns">
+        <section class="panel media-panel stack" aria-label="영상과 타임라인">
+          <div class="video-frame"><video id="hud-video" controls playsinline preload="metadata" aria-label="경고가 표시된 결과 영상 (HUD)" hidden></video><p id="video-empty">이 결과에는 HUD 영상이 없습니다.<br>타임라인과 경고 목록에서 판정 시점을 확인할 수 있어요.</p><span id="current-grade" class="grade-badge"></span></div>
+          <div class="stack-sm"><div class="timeline-heading small muted"><span>위험도 타임라인 · 구간을 누르면 그 시점으로 이동</span><span id="current-time" class="mono"></span></div>
+            <div class="timeline-wrap"><div id="timeline" class="timeline"></div><div id="playhead" aria-hidden="true"></div></div>
+            <label class="sr-only" for="time-seek">영상 시점 이동</label><input type="range" id="time-seek" min="0" max="1" step="0.001" value="0">
+            <div class="legend"><span><i class="level-0"></i>안전</span><span><i class="level-1"></i>주의</span><span><i class="level-2"></i>위험</span><span><i class="level-3"></i>치명</span></div>
+          </div>
+        </section>
+        <section class="panel event-panel stack" aria-label="경고 목록"><h2>경고가 바뀐 시각</h2><div id="events" class="events"></div></section>
+      </div>
+      <div class="result-columns">
+        <details class="panel camera-panel"><summary>카메라 측정값 자세히</summary><div id="cameras"></div></details>
+        <section class="panel downloads stack-sm" aria-label="내려받기"><h2>내려받기</h2><div id="downloads" class="stack-xs"></div></section>
+      </div>
+    </main>
+  </template>
+</body>
+</html>
